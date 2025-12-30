@@ -134,13 +134,20 @@ def db() -> Session:
     finally:
         d.close()
 
+def _bcrypt_safe_pw(pw: str) -> str:
+    # bcrypt admite máximo 72 BYTES (no caracteres)
+    b = pw.encode("utf-8")
+    if len(b) <= 72:
+        return pw
+    # truncamos a 72 bytes para evitar crash
+    return b[:72].decode("utf-8", errors="ignore")
 
 def hash_pw(pw: str) -> str:
-    return pwd_context.hash(pw)
-
+    return pwd_context.hash(_bcrypt_safe_pw(pw))
 
 def verify_pw(pw: str, ph: str) -> bool:
-    return pwd_context.verify(pw, ph)
+    return pwd_context.verify(_bcrypt_safe_pw(pw), ph)
+
 
 
 def init_db():
