@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Usuarios</h2>
+
+<form class="card form" method="post" action="/usuarios/nuevo">
+  <div class="grid2">
+    <div>
+      <label>Nombre</label>
+      <input name="nombre" required>
+    </div>
+    <div>
+      <label>Apellido</label>
+      <input name="apellido" required>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <label>Email</label>
+      <input name="email" type="email" required>
+    </div>
+    <div>
+      <label>Contraseña</label>
+      <input name="password" type="password" required>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <label>Rol</label>
+      <select name="rol">
+        <option value="user">Usuario</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="grow"></div>
+  </div>
+
+  <button class="btn" type="submit">Crear usuario</button>
+</form>
+
+<div class="card">
+  <table class="table">
+    <thead><tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.apellido }}, {{ u.nombre }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.rol }}</td>
+        <td>{{ "Activo" if u.activo else "Inactivo" }}</td>
+        <td class="right">
+          <form action="/usuarios/{{ u.id }}/toggle" method="post" style="display:inline">
+            <button class="btn small secondary" type="submit">{{ "Desactivar" if u.activo else "Activar" }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

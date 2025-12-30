@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Ventas</h2>
+
+<form class="filters" method="get" action="/ventas">
+  <div class="grow">
+    <label>Buscar</label>
+    <input name="q" value="{{ q }}" placeholder="Cliente / Nº / Teléfono">
+  </div>
+
+  <div>
+    <label>Desde</label>
+    <input type="date" name="date_from" value="{{ date_from }}">
+  </div>
+
+  <div>
+    <label>Hasta</label>
+    <input type="date" name="date_to" value="{{ date_to }}">
+  </div>
+
+  <div>
+    <label>Vendedor</label>
+    <select name="vendedor">
+      <option value="">Todos</option>
+      {% for u in vendedores %}
+        <option value="{{ u.id }}" {% if vendedor|int == u.id %}selected{% endif %}>{{ u.apellido }}, {{ u.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <button class="btn" type="submit">Filtrar</button>
+</form>
+
+<div class="actions">
+  <a class="btn secondary" href="/export/ventas.xlsx?date_from={{ date_from }}&date_to={{ date_to }}">Exportar Ventas (.xlsx)</a>
+  <a class="btn secondary" href="/export/items.xlsx?date_from={{ date_from }}&date_to={{ date_to }}">Exportar Items (.xlsx)</a>
+  <a class="btn secondary" href="/export/resumen.xlsx?date_from={{ date_from }}&date_to={{ date_to }}">Exportar Resumen (.xlsx)</a>
+</div>
+
+<div class="card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nº</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Medio</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in ventas %}
+      <tr>
+        <td><a href="/ventas/{{ v.id }}">{{ v.numero }}</a></td>
+        <td>{{ v.fecha.isoformat() }}</td>
+        <td>{{ v.cliente_apellido }}, {{ v.cliente_nombre }}</td>
+        <td>$ {{ money(v.total) }}</td>
+        <td>{{ v.medio_pago or "" }}</td>
+        <td class="right">
+          {% if user.rol == "admin" %}
+          <a class="btn small" href="/ventas/{{ v.id }}/editar">Editar</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="muted">Sin ventas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

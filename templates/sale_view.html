@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row-between">
+  <h2>{{ venta.numero }}</h2>
+  <div>
+    {% if user.rol == "admin" %}
+      <a class="btn" href="/ventas/{{ venta.id }}/editar">Editar</a>
+      <form action="/ventas/{{ venta.id }}/eliminar" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar venta?');">
+        <button class="btn danger" type="submit">Eliminar</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h3>Cliente</h3>
+    <p><b>{{ venta.cliente_apellido }}, {{ venta.cliente_nombre }}</b></p>
+    <p class="muted">Tel: {{ venta.telefono or "—" }}</p>
+    <p class="muted">Fecha: {{ venta.fecha.isoformat() }}</p>
+    <p class="muted">Medio de pago: {{ venta.medio_pago or "—" }}</p>
+    <p class="muted">Cargó: {{ creador.apellido }}, {{ creador.nombre }}</p>
+  </div>
+  <div class="card">
+    <h3>Total</h3>
+    <div class="bigmoney">$ {{ money(venta.total) }}</div>
+    <p class="muted">Obs: {{ venta.observaciones or "—" }}</p>
+  </div>
+</div>
+
+<section class="card">
+  <h3>Ítems</h3>
+  <table class="table">
+    <thead><tr><th>Artículo</th><th>Descripción</th><th>Cant.</th><th>P.Unit</th><th>Subtotal</th></tr></thead>
+    <tbody>
+      {% for it in items %}
+      <tr>
+        <td>{{ it.articulo.nombre if it.articulo else "" }}</td>
+        <td>{{ it.descripcion_libre or "" }}</td>
+        <td>{{ it.cantidad }}</td>
+        <td>$ {{ money(it.precio_unitario) }}</td>
+        <td>$ {{ money(it.subtotal) }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="muted">Sin ítems.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

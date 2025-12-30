@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{ app }}</title>
+  <link rel="stylesheet" href="/static/styles.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">{{ app }}</div>
+
+    {% if user %}
+    <nav class="nav">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/ventas">Ventas</a>
+      <a href="/ventas/nueva" class="btn">+ Nueva venta</a>
+      <a href="/articulos">Artículos</a>
+      {% if user.rol == "admin" %}
+      <a href="/usuarios">Usuarios</a>
+      {% endif %}
+    </nav>
+    <form action="/logout" method="post" class="logout">
+      <span class="userchip">{{ user.apellido }}, {{ user.nombre }}</span>
+      <button type="submit">Salir</button>
+    </form>
+    {% endif %}
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <small>Ventas First • Multiusuario • Exporta a Excel</small>
+  </footer>
+
+<script>
+  function addItemRow() {
+    const tpl = document.getElementById("item-row-template");
+    const target = document.getElementById("items-body");
+    if (!tpl || !target) return;
+    target.insertAdjacentHTML("beforeend", tpl.innerHTML);
+  }
+
+  function recalcTotal() {
+    const rows = document.querySelectorAll(".item-row");
+    let total = 0;
+    rows.forEach(r => {
+      const qty = parseFloat((r.querySelector('input[name="item_qty"]')?.value || "0").replace(",", "."));
+      const unit = parseFloat((r.querySelector('input[name="item_unit"]')?.value || "0").replace(",", "."));
+      const sub = (qty * unit) || 0;
+      const subEl = r.querySelector(".subtotal");
+      if (subEl) subEl.textContent = sub.toLocaleString("es-AR", {minimumFractionDigits:2, maximumFractionDigits:2});
+      total += sub;
+    });
+    const totalEl = document.getElementById("total-view");
+    if (totalEl) totalEl.textContent = total.toLocaleString("es-AR", {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  document.addEventListener("input", (e) => {
+    if (e.target && (e.target.name === "item_qty" || e.target.name === "item_unit")) {
+      recalcTotal();
+    }
+  });
+</script>
+</body>
+</html>

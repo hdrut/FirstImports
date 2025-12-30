@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Artículos / Servicios</h2>
+
+{% if user.rol == "admin" %}
+<form class="card form" method="post" action="/articulos/nuevo">
+  <div class="grid2">
+    <div>
+      <label>Nombre</label>
+      <input name="nombre" required placeholder="Ej: Kit 4 cámaras / Instalación alarma">
+    </div>
+    <div>
+      <label>Categoría</label>
+      <input name="categoria" placeholder="Cámaras / Alarmas / Mano de obra / Accesorios">
+    </div>
+  </div>
+  <button class="btn" type="submit">Crear</button>
+</form>
+{% endif %}
+
+<div class="card">
+  <table class="table">
+    <thead><tr><th>Nombre</th><th>Categoría</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      {% for a in articulos %}
+      <tr>
+        <td>{{ a.nombre }}</td>
+        <td>{{ a.categoria }}</td>
+        <td>{{ "Activo" if a.activo else "Inactivo" }}</td>
+        <td class="right">
+          {% if user.rol == "admin" %}
+          <form action="/articulos/{{ a.id }}/toggle" method="post" style="display:inline">
+            <button class="btn small secondary" type="submit">{{ "Desactivar" if a.activo else "Activar" }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="muted">No hay artículos aún.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{ app }} - Login</title>
+  <link rel="stylesheet" href="/static/styles.css"/>
+</head>
+<body class="center">
+  <div class="card">
+    <h1>{{ app }}</h1>
+    <p class="muted">Ingresá para cargar ventas y exportar a Excel.</p>
+
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+
+    <form action="/login" method="post" class="form">
+      <label>Email</label>
+      <input name="email" type="email" placeholder="tu@email.com" required>
+      <label>Contraseña</label>
+      <input name="password" type="password" required>
+      <button type="submit" class="btn full">Entrar</button>
+    </form>
+  </div>
+</body>
+</html>

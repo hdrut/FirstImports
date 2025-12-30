@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard</h2>
+
+<form class="filters" method="get" action="/dashboard">
+  <div>
+    <label>Desde</label>
+    <input type="date" name="date_from" value="{{ df.isoformat() }}">
+  </div>
+  <div>
+    <label>Hasta</label>
+    <input type="date" name="date_to" value="{{ dt.isoformat() }}">
+  </div>
+  <div class="grow"></div>
+  <button class="btn" type="submit">Aplicar</button>
+</form>
+
+<div class="grid">
+  <div class="kpi">
+    <div class="kpi-title">Total vendido</div>
+    <div class="kpi-value">$ {{ money(total) }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-title">Cantidad de ventas</div>
+    <div class="kpi-value">{{ count }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-title">Ticket promedio</div>
+    <div class="kpi-value">$ {{ money(ticket) }}</div>
+  </div>
+</div>
+
+<div class="grid2">
+  <section class="card">
+    <h3>Top artículos (por $)</h3>
+    <table class="table">
+      <thead><tr><th>Artículo</th><th>Facturación</th><th>Cant.</th></tr></thead>
+      <tbody>
+      {% for nombre, fact, qty in top_art %}
+        <tr>
+          <td>{{ nombre }}</td>
+          <td>$ {{ money(fact) }}</td>
+          <td>{{ qty }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="3" class="muted">Sin datos en el rango.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h3>Últimas ventas</h3>
+    <table class="table">
+      <thead><tr><th>Nº</th><th>Fecha</th><th>Cliente</th><th>Total</th></tr></thead>
+      <tbody>
+      {% for v in ult %}
+        <tr>
+          <td><a href="/ventas/{{ v.id }}">{{ v.numero }}</a></td>
+          <td>{{ v.fecha.isoformat() }}</td>
+          <td>{{ v.cliente_apellido }}, {{ v.cliente_nombre }}</td>
+          <td>$ {{ money(v.total) }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4" class="muted">Aún no hay ventas.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}
