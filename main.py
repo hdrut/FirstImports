@@ -24,9 +24,6 @@ from openpyxl.utils import get_column_letter
 
 from fastapi.responses import FileResponse
 
-@app.get("/favicon.ico", include_in_schema=False)
-def favicon():
-    return FileResponse("static/favicon.ico")
 
 
 
@@ -857,3 +854,7 @@ def export_resumen(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="resumen_por_articulo.xlsx"'},
     )
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse("static/favicon.ico")
