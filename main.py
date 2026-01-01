@@ -22,6 +22,13 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship,
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 
+from fastapi.responses import FileResponse
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse("static/favicon.ico")
+
+
 
 # -----------------------------
 # Config
