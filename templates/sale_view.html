@@ -13,14 +13,20 @@
 </div>
 
 <div class="grid2">
-  <div class="card">
-    <h3>Cliente</h3>
-    <p><b>{{ venta.cliente_apellido }}, {{ venta.cliente_nombre }}</b></p>
-    <p class="muted">Tel: {{ venta.telefono or "—" }}</p>
-    <p class="muted">Fecha: {{ venta.fecha.isoformat() }}</p>
-    <p class="muted">Medio de pago: {{ venta.medio_pago or "—" }}</p>
-    <p class="muted">Cargó: {{ creador.apellido }}, {{ creador.nombre }}</p>
-  </div>
+<div class="card">
+  <h3>Cliente</h3>
+  <p><b>{{ venta.cliente_apellido }}, {{ venta.cliente_nombre }}</b></p>
+  <p class="muted">Tel: {{ venta.telefono or "—" }}</p>
+
+  {% if venta.direccion %}
+    <p class="muted">Dirección: {{ venta.direccion }}</p>
+  {% endif %}
+
+  <p class="muted">Fecha: {{ venta.fecha.isoformat() }}</p>
+  <p class="muted">Medio de pago: {{ venta.medio_pago or "—" }}</p>
+  <p class="muted">Cargó: {{ creador.apellido }}, {{ creador.nombre }}</p>
+</div>
+
   <div class="card">
     <h3>Total</h3>
     <div class="bigmoney">$ {{ money(venta.total) }}</div>
