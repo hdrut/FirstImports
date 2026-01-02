@@ -6,7 +6,7 @@ from datetime import datetime, date
 from typing import Optional, List
 
 from fastapi import FastAPI, Request, Form, Depends, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -15,16 +15,12 @@ from starlette.middleware.sessions import SessionMiddleware
 from passlib.context import CryptContext
 
 from sqlalchemy import (
-    create_engine, String, Integer, Float, Boolean, Date, DateTime, ForeignKey, select, func, desc
+    create_engine, String, Integer, Float, Boolean, Date, DateTime, ForeignKey, select, func, desc, text
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session, sessionmaker
 
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
-
-from fastapi.responses import FileResponse
-
-
 
 
 # -----------------------------
@@ -139,24 +135,49 @@ def db() -> Session:
     finally:
         d.close()
 
+
+# -----------------------------
+# Password helpers (bcrypt-safe)
+# -----------------------------
 def _bcrypt_safe_pw(pw: str) -> str:
     # bcrypt admite máximo 72 BYTES (no caracteres)
     b = pw.encode("utf-8")
     if len(b) <= 72:
         return pw
-    # truncamos a 72 bytes para evitar crash
     return b[:72].decode("utf-8", errors="ignore")
+
 
 def hash_pw(pw: str) -> str:
     return pwd_context.hash(_bcrypt_safe_pw(pw))
+
 
 def verify_pw(pw: str, ph: str) -> bool:
     return pwd_context.verify(_bcrypt_safe_pw(pw), ph)
 
 
+# -----------------------------
+# DB init + lightweight migrations
+# -----------------------------
+def migrate():
+    # Agrega columna direccion si falta (Postgres / SQLite compatibles con IF NOT EXISTS?)
+    # Postgres: OK. SQLite: ADD COLUMN funciona, pero sin IF NOT EXISTS en versiones viejas.
+    # Como hoy corrés en Postgres, usamos IF NOT EXISTS.
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS direccion VARCHAR(200);"))
+
 
 def init_db():
+    # Primero: crear tablas
     Base.metadata.create_all(bind=engine)
+
+    # Migraciones livianas
+    try:
+        migrate()
+    except Exception:
+        # Si falla (p.ej. SQLite viejo), seguimos sin romper el arranque.
+        pass
+
+    # Crear admin si no existe
     with SessionLocal() as s:
         exists = s.scalar(select(func.count()).select_from(User))
         if not exists:
@@ -170,18 +191,6 @@ def init_db():
             )
             s.add(admin)
             s.commit()
-            
-from sqlalchemy import text
-
-def migrate_add_direccion():
-    with engine.begin() as conn:
-        conn.execute(text("""
-            ALTER TABLE ventas
-            ADD COLUMN IF NOT EXISTS direccion VARCHAR(200);
-        """))
-
-migrate_add_direccion()
-Base.metadata.create_all(bind=engine)
 
 
 init_db()
@@ -225,7 +234,7 @@ def next_sale_number(d: Session, y: int) -> str:
         return f"{prefix}000001"
     m = re.match(rf"V-{y}-(\d+)$", last)
     n = int(m.group(1)) if m else 0
-    return f"{prefix}{n+1:06d}"
+    return f"{prefix}{n + 1:06d}"
 
 
 def parse_date(s: Optional[str]) -> Optional[date]:
@@ -380,6 +389,7 @@ def ventas_list(
             | func.lower(Venta.cliente_apellido).like(s)
             | func.lower(Venta.numero).like(s)
             | func.lower(func.coalesce(Venta.telefono, "")).like(s)
+            | func.lower(func.coalesce(Venta.direccion, "")).like(s)
         )
 
     ventas = d.execute(stmt.limit(500)).scalars().all()
@@ -433,6 +443,7 @@ def venta_new_post(
     cliente_nombre: str = Form(...),
     cliente_apellido: str = Form(...),
     telefono: str = Form(""),
+    direccion: str = Form(""),
     medio_pago: str = Form(""),
     observaciones: str = Form(""),
     item_articulo_id: List[str] = Form([]),
@@ -454,6 +465,7 @@ def venta_new_post(
         cliente_nombre=cliente_nombre.strip(),
         cliente_apellido=cliente_apellido.strip(),
         telefono=telefono.strip() or None,
+        direccion=direccion.strip() or None,
         medio_pago=medio_pago.strip() or None,
         observaciones=observaciones.strip() or None,
         creado_por=user.id,
@@ -544,6 +556,7 @@ def venta_edit_post(
     cliente_nombre: str = Form(...),
     cliente_apellido: str = Form(...),
     telefono: str = Form(""),
+    direccion: str = Form(""),
     medio_pago: str = Form(""),
     observaciones: str = Form(""),
     item_articulo_id: List[str] = Form([]),
@@ -565,6 +578,7 @@ def venta_edit_post(
     venta.cliente_nombre = cliente_nombre.strip()
     venta.cliente_apellido = cliente_apellido.strip()
     venta.telefono = telefono.strip() or None
+    venta.direccion = direccion.strip() or None
     venta.medio_pago = medio_pago.strip() or None
     venta.observaciones = observaciones.strip() or None
 
@@ -737,13 +751,13 @@ def export_ventas(
     wb = Workbook()
     ws = wb.active
     ws.title = "Ventas"
-    ws.append(["Número", "Fecha", "Cliente", "Teléfono", "Medio de pago", "Total", "Vendedor", "Observaciones"])
+    ws.append(["Número", "Fecha", "Cliente", "Teléfono", "Dirección", "Medio de pago", "Total", "Vendedor", "Observaciones"])
 
     for v in ventas:
         u = d.get(User, v.creado_por)
         cliente = f"{v.cliente_apellido}, {v.cliente_nombre}"
         vendedor = f"{u.apellido}, {u.nombre}" if u else ""
-        ws.append([v.numero, v.fecha.isoformat(), cliente, v.telefono or "", v.medio_pago or "", v.total, vendedor, v.observaciones or ""])
+        ws.append([v.numero, v.fecha.isoformat(), cliente, v.telefono or "", v.direccion or "", v.medio_pago or "", v.total, vendedor, v.observaciones or ""])
 
     ws_autofit(ws)
     for cell in ws[1]:
@@ -867,6 +881,7 @@ def export_resumen(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="resumen_por_articulo.xlsx"'},
     )
+
 
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
