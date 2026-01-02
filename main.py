@@ -91,6 +91,7 @@ class Venta(Base):
     cliente_nombre: Mapped[str] = mapped_column(String(80))
     cliente_apellido: Mapped[str] = mapped_column(String(80))
     telefono: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    direccion: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
 
     medio_pago: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)  # Efectivo/Transferencia/Tarjeta/Mixto
     observaciones: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
@@ -169,6 +170,18 @@ def init_db():
             )
             s.add(admin)
             s.commit()
+            
+from sqlalchemy import text
+
+def migrate_add_direccion():
+    with engine.begin() as conn:
+        conn.execute(text("""
+            ALTER TABLE ventas
+            ADD COLUMN IF NOT EXISTS direccion VARCHAR(200);
+        """))
+
+migrate_add_direccion()
+Base.metadata.create_all(bind=engine)
 
 
 init_db()
