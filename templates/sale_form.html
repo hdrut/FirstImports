@@ -36,10 +36,19 @@
       <input name="telefono" value="{{ venta.telefono if venta and venta.telefono else '' }}">
     </div>
     <div>
-      <label>Total</label>
-      <div class="totalbox">$ <span id="total-view">0,00</span></div>
+      <label>Dirección</label>
+      <input name="direccion" value="{{ venta.direccion if venta and venta.direccion else '' }}" 
+      placeholder="Calle y número, localidad"
+      autocomplete="street-address">
     </div>
   </div>
+
+<div class="grid2">
+  <div>
+    <label>Total</label>
+    <div class="totalbox">$ <span id="total-view">0,00</span></div>
+  </div>
+</div>
 
   <label>Observaciones (opcional)</label>
   <textarea name="observaciones" rows="2">{{ venta.observaciones if venta and venta.observaciones else '' }}</textarea>
