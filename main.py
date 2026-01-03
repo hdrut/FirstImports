@@ -308,7 +308,7 @@ def dashboard(
     d: Session = Depends(db),
     user: User = Depends(get_current_user),
 ):
-    df = parse_date(date_from) or date.today().replace(day=1)
+    df = parse_date(date_from) or date(2025, 1, 1) #date.today().replace(day=1)
     dt = parse_date(date_to) or date.today()
 
     total = d.scalar(select(func.coalesce(func.sum(Venta.total), 0.0)).where(Venta.fecha.between(df, dt))) or 0.0
