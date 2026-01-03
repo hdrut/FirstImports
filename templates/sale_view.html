@@ -1,6 +1,44 @@
 {% extends "base.html" %}
 {% block content %}
 
+<style>
+  /* ===== Mobile-only overrides (solo para verificar/asegurar cambios) ===== */
+  :root{ --tap: 56px; --radius: 14px; }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn.big{ min-height: var(--tap); font-size: 1.05rem; padding: 16px 18px; }
+  .btn.full{ width:100%; }
+
+  .page{ padding-bottom: 96px; }
+
+  .actionbar{
+    position: sticky;
+    bottom: 0;
+    padding: 10px;
+    background: rgba(255,255,255,0.96);
+    border-top: 1px solid rgba(0,0,0,0.10);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    z-index: 50;
+    backdrop-filter: blur(8px);
+  }
+
+  /* En pantallas chicas: botones aún más cómodos */
+  @media (max-width: 720px){
+    .btn.big{ min-height: 60px; font-size: 1.1rem; }
+  }
+</style>
+
 <div class="page">
   <div class="row-between">
     <h2>{{ venta.numero }}</h2>
@@ -11,11 +49,9 @@
       <h3>Cliente</h3>
       <p><b>{{ venta.cliente_apellido }}, {{ venta.cliente_nombre }}</b></p>
       <p class="muted">Tel: {{ venta.telefono or "—" }}</p>
-
       {% if venta.direccion %}
         <p class="muted">Dirección: {{ venta.direccion }}</p>
       {% endif %}
-
       <p class="muted">Fecha: {{ venta.fecha.isoformat() }}</p>
       <p class="muted">Medio de pago: {{ venta.medio_pago or "—" }}</p>
       <p class="muted">Cargó: {{ creador.apellido }}, {{ creador.nombre }}</p>
@@ -58,9 +94,8 @@
 </div>
 
 {% if user.rol == "admin" %}
-  <div class="actionbar two">
+  <div class="actionbar">
     <a class="btn big full" href="/ventas/{{ venta.id }}/editar">✏️ Editar</a>
-
     <form action="/ventas/{{ venta.id }}/eliminar"
           method="post"
           onsubmit="return confirm('¿Eliminar venta?');">
