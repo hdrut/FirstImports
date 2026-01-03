@@ -654,44 +654,7 @@ def articulo_new(
 
 @app.post("/articulos/{articulo_id}/toggle")
 def articulo_toggle(
-
-    
-@app.get("/articulos/{articulo_id}/editar", response_class=HTMLResponse)
-def articulo_edit(
     articulo_id: int,
-    request: Request,
-    d: Session = Depends(db),
-    user: User = Depends(get_current_user),
-):
-    a = d.get(Articulo, articulo_id)
-    if not a:
-        raise HTTPException(404)
-    # Solo los admin pueden editar articulos
-    if user.rol != "admin":
-        raise HTTPException(403)
-    return templates.TemplateResponse(
-        "article_form.html",
-        {"request": request, "app": APP_NAME, "user": user, "articulo": a},
-    )
-
-@app.post("/articulos/{articulo_id}/editar")
-def articulo_edit_post(
-    articulo_id: int,
-    nombre: str = Form(...),
-    categoria: str = Form(""),
-    d: Session = Depends(db),
-    user: User = Depends(get_current_user),
-):
-    a = d.get(Articulo, articulo_id)
-    if not a:
-        raise HTTPException(404)
-                    if user.rol != "admin":
-            raise HTTPException(403)
-    a.nombre = nombre.strip()
-    a.categoria = categoria.strip() or "Otros"
-    d.commit()
-    return redirect("/articulos")
-articulo_id: int,
     d: Session = Depends(db),
     user: User = Depends(require_admin),
 ):
@@ -701,6 +664,40 @@ articulo_id: int,
     a.activo = not a.activo
     d.commit()
     return redirect("/articulos")
+
+
+@app.get("/articulos/{articulo_id}/editar", response_class=HTMLResponse)
+def articulo_edit(
+    request: Request,
+    articulo_id: int,
+    d: Session = Depends(db),
+    user: User = Depends(require_admin),
+):
+    a = d.get(Articulo, articulo_id)
+    if not a:
+        raise HTTPException(404)
+    return templates.TemplateResponse(
+        "article_form.html",
+        {"request": request, "app": APP_NAME, "user": user, "articulo": a},
+    )
+
+
+@app.post("/articulos/{articulo_id}/editar")
+def articulo_edit_post(
+    articulo_id: int,
+    nombre: str = Form(...),
+    categoria: str = Form(""),
+    d: Session = Depends(db),
+    user: User = Depends(require_admin),
+):
+    a = d.get(Articulo, articulo_id)
+    if not a:
+        raise HTTPException(404)
+    a.nombre = nombre.strip()
+    a.categoria = categoria.strip() or "Otros"
+    d.commit()
+    return redirect("/articulos")
+
 
 
 # -----------------------------
