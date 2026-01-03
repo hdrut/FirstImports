@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h2>Editar artículo</h2>
+  <form method="post">
+    <div class="form-group">
+      <label for="nombre">Nombre</label>
+      <input type="text" id="nombre" name="nombre" value="{{ articulo.nombre }}" required>
+    </div>
+    <div class="form-group">
+      <label for="categoria">Categoría</label>
+      <input type="text" id="categoria" name="categoria" value="{{ articulo.categoria }}">
+    </div>
+    <button type="submit">Guardar</button>
+    <a href="/articulos">Cancelar</a>
+  </form>
+</div>
+{% endblock %}
