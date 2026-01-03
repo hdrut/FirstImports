@@ -94,14 +94,41 @@
 </div>
 
 {% if user.rol == "admin" %}
-  <div class="actionbar">
-    <a class="btn big full" href="/ventas/{{ venta.id }}/editar">✏️ Editar</a>
-    <form action="/ventas/{{ venta.id }}/eliminar"
-          method="post"
-          onsubmit="return confirm('¿Eliminar venta?');">
-      <button class="btn big full danger" type="submit">🗑 Eliminar</button>
-    </form>
+  <div class="actionbar three">
+    <a class="btn big full" href="/ventas">
+      ⬅️ Volver
+    </a>
+
+    <a class="btn big full" href="/ventas/{{ venta.id }}/editar">
+      ✏️ Editar
+    </a>
+
+    <button class="btn big full danger" type="button"
+            onclick="confirmDelete()">
+      🗑 Eliminar
+    </button>
   </div>
 {% endif %}
+
+
+<form id="deleteForm"
+      action="/ventas/{{ venta.id }}/eliminar"
+      method="post"
+      style="display:none;">
+</form>
+
+<script>
+  function confirmDelete(){
+    const ok = confirm(
+      "⚠️ ATENCIÓN\n\n" +
+      "¿Seguro que querés ELIMINAR esta venta?\n" +
+      "Esta acción NO se puede deshacer."
+    );
+    if(ok){
+      document.getElementById("deleteForm").submit();
+    }
+  }
+</script>
+
 
 {% endblock %}
