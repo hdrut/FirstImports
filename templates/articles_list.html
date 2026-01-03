@@ -29,10 +29,15 @@
         <td>{{ "Activo" if a.activo else "Inactivo" }}</td>
         <td class="right">
           {% if user.rol == "admin" %}
+          <a href="/articulos/{{ a.id }}/editar" class="btn small secondary">Editar</a>
           <form action="/articulos/{{ a.id }}/toggle" method="post" style="display:inline">
+            
+            
             <button class="btn small secondary" type="submit">{{ "Desactivar" if a.activo else "Activar" }}</button>
           </form>
           {% endif %}
+          
+          
         </td>
       </tr>
       {% else %}
