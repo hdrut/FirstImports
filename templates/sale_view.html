@@ -94,7 +94,12 @@
 </div>
 
 {% if user.rol == "admin" %}
-  <div class="actionbar three">
+  <div class="actionbar three"
+     style="
+       background: #1e1e1e;
+       color: #fff;
+       border-top: 1px solid rgba(255,255,255,0.15);
+     ">
     <a class="btn big full" href="/ventas">
       ⬅️ Volver
     </a>
