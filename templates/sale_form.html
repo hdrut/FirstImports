@@ -1,113 +1,205 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>{% if modo == "new" %}Nueva venta{% else %}Editar venta{% endif %}</h2>
 
-<form class="card form" method="post" action="{% if modo == 'new' %}/ventas/nueva{% else %}/ventas/{{ venta.id }}/editar{% endif %}">
-  <div class="grid2">
-    <div>
-      <label>Fecha</label>
-      <input type="date" name="fecha" required value="{% if venta %}{{ venta.fecha.isoformat() }}{% else %}{{ today }}{% endif %}">
-    </div>
-    <div>
-      <label>Medio de pago (opcional)</label>
-      <select name="medio_pago">
-        <option value="">—</option>
-        {% for m in medios %}
-          <option value="{{ m }}" {% if venta and venta.medio_pago == m %}selected{% endif %}>{{ m }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
+<style>
+  /* ===== Mobile UX solo para este archivo (form venta) ===== */
+  :root{ --tap: 60px; --r: 14px; }
 
-  <div class="grid2">
-    <div>
-      <label>Nombre</label>
-      <input name="cliente_nombre" required value="{{ venta.cliente_nombre if venta else '' }}">
-    </div>
-    <div>
-      <label>Apellido</label>
-      <input name="cliente_apellido" required value="{{ venta.cliente_apellido if venta else '' }}">
-    </div>
-  </div>
+  .page{ padding-bottom: 110px; }
 
-  <div class="grid2">
-    <div>
-      <label>Teléfono (opcional)</label>
-      <input name="telefono" value="{{ venta.telefono if venta and venta.telefono else '' }}">
-    </div>
-    <div>
-      <label>Dirección</label>
-      <input name="direccion" value="{{ venta.direccion if venta and venta.direccion else '' }}" 
-      placeholder="Calle y número, localidad"
-      autocomplete="street-address">
-    </div>
-  </div>
+  /* Inputs cómodos */
+  .form input, .form select, .form textarea{
+    width: 100%;
+    min-height: var(--tap);
+    padding: 12px 14px;
+    border-radius: var(--r);
+    font-size: 16px; /* evita zoom iOS */
+  }
+  .form textarea{
+    min-height: 96px;
+    resize: vertical;
+  }
 
-<div class="grid2">
-  <div>
-    <label>Total</label>
-    <div class="totalbox">$ <span id="total-view">0,00</span></div>
-  </div>
-</div>
+  /* En mobile apilar grillas */
+  @media (max-width: 720px){
+    .grid2{ grid-template-columns: 1fr !important; }
+    .row-between{ flex-wrap: wrap; gap: 12px; }
+    .row-between h3{ margin: 0; }
+  }
 
-  <label>Observaciones (opcional)</label>
-  <textarea name="observaciones" rows="2">{{ venta.observaciones if venta and venta.observaciones else '' }}</textarea>
+  /* Total destacado */
+  .totalbox{
+    min-height: var(--tap);
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: var(--r);
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
 
-  <hr/>
+  /* Tabla scrolleable en mobile */
+  .tablewrap{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table{ min-width: 780px; } /* evita que se aplaste demasiado */
 
-  <div class="row-between">
-    <h3>Ítems</h3>
-    <button type="button" class="btn secondary" onclick="addItemRow(); recalcTotal();">+ Agregar ítem</button>
-  </div>
+  /* Barra inferior oscura */
+  .actionbar{
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+    background: #1e1e1e;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .actionbar .btn{
+    min-height: var(--tap);
+    border-radius: var(--r);
+    font-size: 1.1rem;
+    font-weight: 800;
+    width: 100%;
+  }
 
-  <div class="tablewrap">
-    <table class="table">
-      <thead>
-        <tr><th>Artículo</th><th>Descripción libre</th><th>Cant.</th><th>P.Unit</th><th>Subtotal</th></tr>
-      </thead>
-      <tbody id="items-body">
-        {% for it in items %}
-          <tr class="item-row">
-            <td>
-              <select name="item_articulo_id">
-                <option value="">—</option>
-                {% for a in articulos %}
-                  <option value="{{ a.id }}" {% if it.articulo_id == a.id %}selected{% endif %}>{{ a.categoria }} • {{ a.nombre }}</option>
-                {% endfor %}
-              </select>
-            </td>
-            <td><input name="item_desc" value="{{ it.descripcion_libre or '' }}" placeholder="Opcional"></td>
-            <td><input name="item_qty" value="{{ it.cantidad }}" inputmode="decimal"></td>
-            <td><input name="item_unit" value="{{ it.precio_unitario }}" inputmode="decimal"></td>
-            <td class="subtotal">0,00</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  /* Botón agregar ítem grande en mobile */
+  @media (max-width: 720px){
+    .additem{
+      width: 100%;
+      min-height: var(--tap);
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+  }
+</style>
 
-  <template id="item-row-template">
-    <tr class="item-row">
-      <td>
-        <select name="item_articulo_id">
+<div class="page">
+  <h2>{% if modo == "new" %}Nueva venta{% else %}Editar venta{% endif %}</h2>
+
+  <form class="card form" method="post" action="{% if modo == 'new' %}/ventas/nueva{% else %}/ventas/{{ venta.id }}/editar{% endif %}">
+    <div class="grid2">
+      <div>
+        <label>Fecha</label>
+        <input type="date" name="fecha" required value="{% if venta %}{{ venta.fecha.isoformat() }}{% else %}{{ today }}{% endif %}">
+      </div>
+      <div>
+        <label>Medio de pago (opcional)</label>
+        <select name="medio_pago">
           <option value="">—</option>
-          {% for a in articulos %}
-            <option value="{{ a.id }}">{{ a.categoria }} • {{ a.nombre }}</option>
+          {% for m in medios %}
+            <option value="{{ m }}" {% if venta and venta.medio_pago == m %}selected{% endif %}>{{ m }}</option>
           {% endfor %}
         </select>
-      </td>
-      <td><input name="item_desc" placeholder="Opcional"></td>
-      <td><input name="item_qty" value="1" inputmode="decimal"></td>
-      <td><input name="item_unit" value="0" inputmode="decimal"></td>
-      <td class="subtotal">0,00</td>
-    </tr>
-  </template>
+      </div>
+    </div>
 
-  <div class="row-between">
-    <a href="/ventas" class="btn secondary">Cancelar</a>
-    <button class="btn" type="submit">Guardar</button>
-  </div>
-</form>
+    <div class="grid2">
+      <div>
+        <label>Nombre</label>
+        <input name="cliente_nombre" required autocomplete="given-name" value="{{ venta.cliente_nombre if venta else '' }}">
+      </div>
+      <div>
+        <label>Apellido</label>
+        <input name="cliente_apellido" required autocomplete="family-name" value="{{ venta.cliente_apellido if venta else '' }}">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>Teléfono (opcional)</label>
+        <input name="telefono"
+               type="tel"
+               inputmode="tel"
+               autocomplete="tel"
+               value="{{ venta.telefono if venta and venta.telefono else '' }}">
+      </div>
+      <div>
+        <label>Dirección</label>
+        <input name="direccion"
+               value="{{ venta.direccion if venta and venta.direccion else '' }}"
+               placeholder="Calle y número, localidad"
+               autocomplete="street-address">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>Total</label>
+        <div class="totalbox">$ <span id="total-view">0,00</span></div>
+      </div>
+    </div>
+
+    <label>Observaciones (opcional)</label>
+    <textarea name="observaciones" rows="2" autocomplete="off">{{ venta.observaciones if venta and venta.observaciones else '' }}</textarea>
+
+    <hr/>
+
+    <div class="row-between">
+      <h3>Ítems</h3>
+      <button type="button" class="btn secondary additem" onclick="addItemRow(); recalcTotal();">+ Agregar ítem</button>
+    </div>
+
+    <div class="tablewrap">
+      <table class="table">
+        <thead>
+          <tr><th>Artículo</th><th>Descripción libre</th><th>Cant.</th><th>P.Unit</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody id="items-body">
+          {% for it in items %}
+            <tr class="item-row">
+              <td>
+                <select name="item_articulo_id">
+                  <option value="">—</option>
+                  {% for a in articulos %}
+                    <option value="{{ a.id }}" {% if it.articulo_id == a.id %}selected{% endif %}>{{ a.categoria }} • {{ a.nombre }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td><input name="item_desc" value="{{ it.descripcion_libre or '' }}" placeholder="Opcional"></td>
+              <td><input name="item_qty" value="{{ it.cantidad }}" inputmode="decimal"></td>
+              <td><input name="item_unit" value="{{ it.precio_unitario }}" inputmode="decimal"></td>
+              <td class="subtotal">0,00</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <template id="item-row-template">
+      <tr class="item-row">
+        <td>
+          <select name="item_articulo_id">
+            <option value="">—</option>
+            {% for a in articulos %}
+              <option value="{{ a.id }}">{{ a.categoria }} • {{ a.nombre }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td><input name="item_desc" placeholder="Opcional"></td>
+        <td><input name="item_qty" value="1" inputmode="decimal"></td>
+        <td><input name="item_unit" value="0" inputmode="decimal"></td>
+        <td class="subtotal">0,00</td>
+      </tr>
+    </template>
+
+    <!-- En mobile usaremos la actionbar de abajo; esto se deja por compatibilidad desktop -->
+    <div class="row-between" style="margin-top: 14px;">
+      <a href="/ventas" class="btn secondary">Cancelar</a>
+      <button class="btn" type="submit">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<!-- Barra inferior (mobile-friendly) -->
+<div class="actionbar">
+  <a href="/ventas" class="btn" style="background:#2a2a2a;color:#fff;">Cancelar</a>
+  <button class="btn" type="submit"
+          form="{{ '' }}"
+          onclick="document.querySelector('form.card.form').requestSubmit();"
+          style="background:#2a2a2a;color:#fff;">
+    Guardar
+  </button>
+</div>
 
 <script>
   (function(){
