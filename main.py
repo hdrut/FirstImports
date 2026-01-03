@@ -667,7 +667,7 @@ def articulo_edit(
     if not a:
         raise HTTPException(404)
     # Solo los admin pueden editar articulos
-    if not getattr(user, "es_admin", False):
+    if user.rol != "admin":
         raise HTTPException(403)
     return templates.TemplateResponse(
         "article_form.html",
@@ -685,8 +685,8 @@ def articulo_edit_post(
     a = d.get(Articulo, articulo_id)
     if not a:
         raise HTTPException(404)
-    if not getattr(user, "es_admin", False):
-        raise HTTPException(403)
+                    if user.rol != "admin":
+            raise HTTPException(403)
     a.nombre = nombre.strip()
     a.categoria = categoria.strip() or "Otros"
     d.commit()
