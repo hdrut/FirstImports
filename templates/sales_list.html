@@ -1,67 +1,181 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Ventas</h2>
 
-<form class="filters" method="get" action="/ventas">
-  <div class="grow">
-    <label>Buscar</label>
-    <input name="q" value="{{ q }}" placeholder="Cliente / Nº / Teléfono">
+<style>
+  /* ===== Mobile UX solo para este archivo (listado) ===== */
+  .mobile-only{ display:none; }
+  .desktop-only{ display:block; }
+
+  @media (max-width: 720px){
+    .desktop-only{ display:none; }
+    .mobile-only{ display:block; }
+
+    .filters{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .filters .grow{ width:100%; }
+    .filters input, .filters select{
+      width:100%;
+      min-height:56px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size:16px;
+    }
+    .filters .btn{ min-height:56px; font-size:1.05rem; }
+
+    .sales-cards{
+      display:grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .sale-card{
+      display:block;
+      text-decoration:none;
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .sale-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .sale-num{ font-weight:800; }
+    .sale-total{ font-weight:800; }
+    .sale-sub{ opacity: .8; font-size: .95rem; }
+    .sale-meta{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      opacity: .85;
+      font-size: .95rem;
+    }
+
+    .page{ padding-bottom: 96px; }
+
+    .actionbar{
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 10px;
+      background: #1e1e1e;
+      border-top: 1px solid rgba(255,255,255,0.15);
+    }
+    .actionbar .btn{
+      min-height: 60px;
+      font-size: 1.1rem;
+      border-radius: 14px;
+      font-weight: 800;
+    }
+  }
+</style>
+
+<div class="page">
+  <h2>Ventas</h2>
+
+  <form class="filters" method="get" action="/ventas">
+    <div class="grow">
+      <label>Buscar</label>
+      <input name="q" value="{{ q }}" placeholder="Cliente / Nº / Teléfono">
+    </div>
+
+    <div>
+      <label>Desde</label>
+      <input type="date" name="date_from" value="{{ date_from }}">
+    </div>
+
+    <div>
+      <label>Hasta</label>
+      <input type="date" name="date_to" value="{{ date_to }}">
+    </div>
+
+    <div>
+      <label>Vendedor</label>
+      <select name="vendedor">
+        <option value="">Todos</option>
+        {% for u in vendedores %}
+          <option value="{{ u.id }}" {% if vendedor|int == u.id %}selected{% endif %}>{{ u.apellido }}, {{ u.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button class="btn big full" type="submit">Filtrar</button>
+  </form>
+
+  <div class="actions">
+    <a class="btn secondary" href="/export/ventas.xlsx?date_from={{ date_from }}&date_to={{ date_to }}">Exportar Ventas (.xlsx)</a>
+    <a class="btn secondary" href="/export/items.xlsx?date_from={{ date_from }}&date_to={{ date_to }}">Exportar Items (.xlsx)</a>
+    <a class="btn secondary" href="/export/resumen.xlsx?date_from={{ date_from }}&date_to={{ date_to }}">Exportar Resumen (.xlsx)</a>
   </div>
 
-  <div>
-    <label>Desde</label>
-    <input type="date" name="date_from" value="{{ date_from }}">
+  <!-- ===== Desktop: tabla actual ===== -->
+  <div class="card desktop-only">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nº</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Medio</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in ventas %}
+        <tr>
+          <td><a href="/ventas/{{ v.id }}">{{ v.numero }}</a></td>
+          <td>{{ v.fecha.isoformat() }}</td>
+          <td>{{ v.cliente_apellido }}, {{ v.cliente_nombre }}</td>
+          <td>$ {{ money(v.total) }}</td>
+          <td>{{ v.medio_pago or "" }}</td>
+          <td class="right">
+            {% if user.rol == "admin" %}
+            <a class="btn small" href="/ventas/{{ v.id }}/editar">Editar</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="muted">Sin ventas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 
-  <div>
-    <label>Hasta</label>
-    <input type="date" name="date_to" value="{{ date_to }}">
-  </div>
-
-  <div>
-    <label>Vendedor</label>
-    <select name="vendedor">
-      <option value="">Todos</option>
-      {% for u in vendedores %}
-        <option value="{{ u.id }}" {% if vendedor|int == u.id %}selected{% endif %}>{{ u.apellido }}, {{ u.nombre }}</option>
-      {% endfor %}
-    </select>
-  </div>
-
-  <button class="btn" type="submit">Filtrar</button>
-</form>
-
-<div class="actions">
-  <a class="btn secondary" href="/export/ventas.xlsx?date_from={{ date_from }}&date_to={{ date_to }}">Exportar Ventas (.xlsx)</a>
-  <a class="btn secondary" href="/export/items.xlsx?date_from={{ date_from }}&date_to={{ date_to }}">Exportar Items (.xlsx)</a>
-  <a class="btn secondary" href="/export/resumen.xlsx?date_from={{ date_from }}&date_to={{ date_to }}">Exportar Resumen (.xlsx)</a>
-</div>
-
-<div class="card">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Nº</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Medio</th><th></th>
-      </tr>
-    </thead>
-    <tbody>
+  <!-- ===== Mobile: tarjetas grandes tocables ===== -->
+  <div class="mobile-only">
+    <div class="sales-cards">
       {% for v in ventas %}
-      <tr>
-        <td><a href="/ventas/{{ v.id }}">{{ v.numero }}</a></td>
-        <td>{{ v.fecha.isoformat() }}</td>
-        <td>{{ v.cliente_apellido }}, {{ v.cliente_nombre }}</td>
-        <td>$ {{ money(v.total) }}</td>
-        <td>{{ v.medio_pago or "" }}</td>
-        <td class="right">
-          {% if user.rol == "admin" %}
-          <a class="btn small" href="/ventas/{{ v.id }}/editar">Editar</a>
-          {% endif %}
-        </td>
-      </tr>
+        <a class="card sale-card" href="/ventas/{{ v.id }}">
+          <div class="sale-top">
+            <div>
+              <div class="sale-num">{{ v.numero }} — {{ v.cliente_apellido }}, {{ v.cliente_nombre }}</div>
+              <div class="sale-sub">{{ v.fecha.isoformat() }}</div>
+            </div>
+            <div class="sale-total">$ {{ money(v.total) }}</div>
+          </div>
+
+          <div class="sale-meta">
+            {% if v.medio_pago %}
+              <span>💳 {{ v.medio_pago }}</span>
+            {% endif %}
+            <span>👉 Ver detalle</span>
+          </div>
+        </a>
       {% else %}
-      <tr><td colspan="6" class="muted">Sin ventas.</td></tr>
+        <div class="card muted">Sin ventas.</div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
+  </div>
 </div>
+
+<!-- Barra inferior mobile -->
+<div class="actionbar mobile-only">
+  <a class="btn big full" style="background:#2a2a2a;color:#fff;" href="/ventas/nueva">
+    ➕ Nueva venta
+  </a>
+</div>
+
 {% endblock %}
