@@ -48,3 +48,111 @@ button{cursor:pointer}
   .grid2{grid-template-columns:1fr}
   .nav{gap:8px}
 }
+/* ====== Mobile UX defaults ====== */
+:root{
+  --tap: 48px;              /* tamaño recomendado de touch target */
+  --radius: 14px;
+  --gap: 12px;
+  --fs: 16px;
+}
+
+html { font-size: var(--fs); }
+body { -webkit-text-size-adjust: 100%; }
+
+a, button, input, select, textarea {
+  font-size: 1rem;
+}
+
+/* Evita zoom raro en iOS si font-size <16 */
+input, select, textarea { font-size: 16px; }
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height: var(--tap);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  text-decoration:none;
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn.big{
+  min-height: 56px;
+  padding: 16px 18px;
+  font-size: 1.05rem;
+}
+
+.btn.full{
+  width: 100%;
+}
+
+.btn.danger{ /* si ya existe, mantené tu color */
+  /* background: ...; */
+}
+
+.row-between{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: var(--gap);
+  flex-wrap: wrap; /* clave en mobile */
+}
+
+/* Grillas existentes -> apilar en mobile */
+.grid2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+}
+
+@media (max-width: 720px){
+  .grid2{ grid-template-columns: 1fr; }
+}
+
+/* Cards con padding cómodo */
+.card{
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+/* ====== Sticky action bar (bottom) ====== */
+.actionbar{
+  position: sticky;
+  bottom: 0;
+  padding: 10px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(0,0,0,0.08);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  z-index: 50;
+}
+
+/* Si hay 3 botones */
+.actionbar.three{
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Separación para que el contenido no quede tapado por la actionbar */
+.page{
+  padding-bottom: 90px;
+}
+
+/* Listas “clickeables” más grandes */
+.list-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--radius);
+  text-decoration:none;
+}
+.list-item:active{
+  transform: scale(0.99);
+}
