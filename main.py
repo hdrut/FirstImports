@@ -2,6 +2,31 @@ from __future__ import annotations
 
 import os
 import re
+
+from datetime import datetime, timezone
+
+APP_STARTED_AT_UTC = datetime.now(timezone.utc)
+
+def get_build_info() -> dict:
+    """Return build/deploy metadata for display in templates.
+
+    On Koyeb GitHub deployments, KOYEB_GIT_SHA is provided automatically.
+    """
+    sha = os.getenv("KOYEB_GIT_SHA") or os.getenv("GIT_SHA") or ""
+    branch = os.getenv("KOYEB_GIT_BRANCH") or os.getenv("GIT_BRANCH") or ""
+    # Optional: let you override the displayed build time from an env var (ISO 8601).
+    build_time = os.getenv("APP_BUILD_TIME") or os.getenv("BUILD_TIME") or ""
+
+    if not build_time:
+        build_time = APP_STARTED_AT_UTC.isoformat()
+
+    return {
+        "sha": sha,
+        "sha_short": sha[:7] if sha else "",
+        "branch": branch,
+        "build_time": build_time,  # ISO string (usually UTC)
+    }
+
 from datetime import datetime, date
 from typing import Optional, List
 
@@ -350,6 +375,7 @@ def dashboard(
             "top_art": top_art,
             "ult": ult,
             "money": money,
+            "build": get_build_info(),
         },
     )
 
@@ -654,7 +680,44 @@ def articulo_new(
 
 @app.post("/articulos/{articulo_id}/toggle")
 def articulo_toggle(
+
+    
+@app.get("/articulos/{articulo_id}/editar", response_class=HTMLResponse)
+def articulo_edit(
     articulo_id: int,
+    request: Request,
+    d: Session = Depends(db),
+    user: User = Depends(get_current_user),
+):
+    a = d.get(Articulo, articulo_id)
+    if not a:
+        raise HTTPException(404)
+    # Solo los admin pueden editar articulos
+    if user.rol != "admin":
+        raise HTTPException(403)
+    return templates.TemplateResponse(
+        "article_form.html",
+        {"request": request, "app": APP_NAME, "user": user, "articulo": a},
+    )
+
+@app.post("/articulos/{articulo_id}/editar")
+def articulo_edit_post(
+    articulo_id: int,
+    nombre: str = Form(...),
+    categoria: str = Form(""),
+    d: Session = Depends(db),
+    user: User = Depends(get_current_user),
+):
+    a = d.get(Articulo, articulo_id)
+    if not a:
+        raise HTTPException(404)
+                    if user.rol != "admin":
+            raise HTTPException(403)
+    a.nombre = nombre.strip()
+    a.categoria = categoria.strip() or "Otros"
+    d.commit()
+    return redirect("/articulos")
+articulo_id: int,
     d: Session = Depends(db),
     user: User = Depends(require_admin),
 ):
@@ -664,40 +727,6 @@ def articulo_toggle(
     a.activo = not a.activo
     d.commit()
     return redirect("/articulos")
-
-
-@app.get("/articulos/{articulo_id}/editar", response_class=HTMLResponse)
-def articulo_edit(
-    request: Request,
-    articulo_id: int,
-    d: Session = Depends(db),
-    user: User = Depends(require_admin),
-):
-    a = d.get(Articulo, articulo_id)
-    if not a:
-        raise HTTPException(404)
-    return templates.TemplateResponse(
-        "article_form.html",
-        {"request": request, "app": APP_NAME, "user": user, "articulo": a},
-    )
-
-
-@app.post("/articulos/{articulo_id}/editar")
-def articulo_edit_post(
-    articulo_id: int,
-    nombre: str = Form(...),
-    categoria: str = Form(""),
-    d: Session = Depends(db),
-    user: User = Depends(require_admin),
-):
-    a = d.get(Articulo, articulo_id)
-    if not a:
-        raise HTTPException(404)
-    a.nombre = nombre.strip()
-    a.categoria = categoria.strip() or "Otros"
-    d.commit()
-    return redirect("/articulos")
-
 
 
 # -----------------------------
