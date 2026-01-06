@@ -658,7 +658,11 @@ def articulos_list(
     d: Session = Depends(db),
     user: User = Depends(get_current_user),
 ):
-    articulos = d.execute(select(Articulo).order_by(Articulo.activo.desc(), Articulo.categoria, Articulo.nombre)).scalars().all()
+    articulos = (
+        d.execute(select(Articulo).order_by(Articulo.activo.desc(), Articulo.categoria, Articulo.nombre))
+        .scalars()
+        .all()
+    )
     return templates.TemplateResponse(
         "articles_list.html",
         {"request": request, "app": APP_NAME, "user": user, "articulos": articulos},
@@ -689,26 +693,24 @@ def articulo_toggle(
         raise HTTPException(404)
     a.activo = not a.activo
     d.commit()
+    return redirect("/articulos")
 
 
-    
 @app.get("/articulos/{articulo_id}/editar", response_class=HTMLResponse)
 def articulo_edit(
-    articulo_id: int,
     request: Request,
+    articulo_id: int,
     d: Session = Depends(db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_admin),
 ):
     a = d.get(Articulo, articulo_id)
     if not a:
         raise HTTPException(404)
-    # Solo los admin pueden editar articulos
-    if user.rol != "admin":
-        raise HTTPException(403)
     return templates.TemplateResponse(
         "article_form.html",
         {"request": request, "app": APP_NAME, "user": user, "articulo": a},
     )
+
 
 @app.post("/articulos/{articulo_id}/editar")
 def articulo_edit_post(
@@ -716,29 +718,15 @@ def articulo_edit_post(
     nombre: str = Form(...),
     categoria: str = Form(""),
     d: Session = Depends(db),
-    user: User = Depends(get_current_user),
-):
-    a = d.get(Articulo, articulo_id)
-    if not a:
-        raise HTTPException(404)
-            if user.rol != "admin":
-                raise HTTPException(403)
-    a.nombre = nombre.strip()
-    a.categoria = categoria.strip() or "Otros"
-    d.commit()
-    return redirect("/articulos")
-articulo_id: int,
-    d: Session = Depends(db),
     user: User = Depends(require_admin),
 ):
     a = d.get(Articulo, articulo_id)
     if not a:
         raise HTTPException(404)
-    a.activo = not a.activo
+    a.nombre = nombre.strip()
+    a.categoria = categoria.strip() or "Otros"
     d.commit()
     return redirect("/articulos")
-
-
 # -----------------------------
 # Routes: Usuarios (admin)
 # -----------------------------
