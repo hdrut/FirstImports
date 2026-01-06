@@ -721,8 +721,8 @@ def articulo_edit_post(
     a = d.get(Articulo, articulo_id)
     if not a:
         raise HTTPException(404)
-                    if user.rol != "admin":
-            raise HTTPException(403)
+            if user.rol != "admin":
+                raise HTTPException(403)
     a.nombre = nombre.strip()
     a.categoria = categoria.strip() or "Otros"
     d.commit()
