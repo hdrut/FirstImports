@@ -680,6 +680,16 @@ def articulo_new(
 
 @app.post("/articulos/{articulo_id}/toggle")
 def articulo_toggle(
+    articulo_id: int,
+    d: Session = Depends(db),
+    user: User = Depends(require_admin),
+):
+    a = d.get(Articulo, articulo_id)
+    if not a:
+        raise HTTPException(404)
+    a.activo = not a.activo
+    d.commit()
+
 
     
 @app.get("/articulos/{articulo_id}/editar", response_class=HTMLResponse)
