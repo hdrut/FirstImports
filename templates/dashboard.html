@@ -68,4 +68,13 @@
     </table>
   </section>
 </div>
+
+{% if build %}
+  <p class="muted" style="margin-top:12px;font-size:12px;">
+    Último deploy: {{ build.build_time }} (UTC)
+    {% if build.branch %} • Branch: {{ build.branch }}{% endif %}
+    {% if build.sha_short %} • Commit: {{ build.sha_short }}{% endif %}
+  </p>
+{% endif %}
+
 {% endblock %}
