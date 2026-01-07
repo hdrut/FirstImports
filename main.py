@@ -27,6 +27,11 @@ def get_build_info() -> dict:
         "build_time": build_time,  # ISO string (usually UTC)
     }
 
+
+from fastapi.staticfiles import StaticFiles
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
 from datetime import datetime, date
 from typing import Optional, List
 
