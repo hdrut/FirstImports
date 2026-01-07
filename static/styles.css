@@ -157,9 +157,13 @@ input, select, textarea { font-size: 16px; }
   transform: scale(0.99);
 }
 
-/* ===== Drawer mobile ===== */
+/* ===== Drawer mobile (final) ===== */
+
+/* Fix: tu CSS global pone button { width:100% } */
 .nav-toggle{
-  display: none;              /* se habilita en mobile */
+  width: auto !important;
+  max-width: 52px;
+  display: none; /* default: oculto */
   border: 0;
   background: transparent;
   font-size: 22px;
@@ -168,20 +172,18 @@ input, select, textarea { font-size: 16px; }
   border-radius: 10px;
 }
 
-.menu{
-  display: flex;              /* desktop: nav + logout como antes */
-  align-items: center;
-  gap: 16px;
-}
+.menu-overlay{ display:none; }
 
-.menu-overlay{
-  display: none;              /* desktop: no */
-}
+/* ACTIVAR drawer SOLO en móviles/touch (evita que aparezca en PC) */
+@media (hover: none) and (pointer: coarse) {
 
-@media (max-width: 820px){
-  .nav-toggle{ display: inline-flex; align-items:center; justify-content:center; }
+  .nav-toggle{
+    display: inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
 
-  /* El contenedor menu pasa a ser drawer */
+  /* el menú pasa a ser drawer (fuera de pantalla) */
   .menu{
     position: fixed;
     top: 0;
@@ -189,11 +191,15 @@ input, select, textarea { font-size: 16px; }
     height: 100vh;
     width: min(84vw, 320px);
     padding: 16px;
+
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 14px;
-    background: #fff;
+
+    background: var(--card);
     z-index: 1001;
+
     transform: translateX(-105%);
     transition: transform .2s ease;
   }
@@ -202,19 +208,25 @@ input, select, textarea { font-size: 16px; }
     transform: translateX(0);
   }
 
-  /* Nav en columna */
+  /* nav vertical dentro del drawer */
   .menu .nav{
-    display: flex;
+    display:flex;
     flex-direction: column;
+    flex-wrap: nowrap;
     gap: 10px;
   }
 
-  /* Logout abajo del todo */
+  /* importante: “anula” cualquier flex raro que te hubiera quedado */
+  .menu .nav a{
+    flex: initial;
+  }
+
+  /* logout abajo */
   .menu .logout{
     margin-top: auto;
   }
 
-  /* Overlay */
+  /* overlay */
   .menu-overlay{
     display: block;
     position: fixed;
@@ -231,81 +243,8 @@ input, select, textarea { font-size: 16px; }
     pointer-events: auto;
   }
 
-  /* Opcional: evita scroll del body cuando el menú está abierto */
   body.menu-open{
     overflow: hidden;
   }
 }
 
-@media (max-width: 520px){
-  .brand-text{ display:none; }
-}
-
-/* ===== Drawer mobile: hard override ===== */
-
-/* Desktop default */
-header.topbar .nav-toggle { display: none !important; }
-header.topbar .menu { display: flex !important; align-items: center; gap: 16px; }
-header.topbar .menu-overlay { display: none !important; }
-
-/* Mobile */
-@media (max-width: 820px) {
-  header.topbar .nav-toggle { 
-    display: inline-flex !important; 
-    align-items: center; 
-    justify-content: center; 
-  }
-
-  /* drawer */
-  header.topbar .menu {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    height: 100vh !important;
-    width: min(84vw, 320px) !important;
-    padding: 16px !important;
-
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 14px !important;
-
-    z-index: 1001 !important;
-    transform: translateX(-105%) !important;
-    transition: transform .2s ease !important;
-    background: #fff !important;
-  }
-
-  body.menu-open header.topbar .menu {
-    transform: translateX(0) !important;
-  }
-
-  /* nav en columna dentro del drawer */
-  header.topbar .menu .nav {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 10px !important;
-  }
-
-  /* logout al fondo */
-  header.topbar .menu .logout { margin-top: auto !important; }
-
-  /* overlay */
-  header.topbar .menu-overlay {
-    display: block !important;
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0,0,0,.35) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: opacity .2s ease !important;
-    z-index: 1000 !important;
-  }
-
-  body.menu-open header.topbar .menu-overlay {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
-
-  body.menu-open { overflow: hidden; }
-}
