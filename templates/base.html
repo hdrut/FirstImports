@@ -115,68 +115,39 @@
     <small>Ventas First • Multiusuario • Exporta a Excel</small>
   </footer>
 
-  <script>
-    function addItemRow() {
-      const tpl = document.getElementById("item-row-template");
-      const target = document.getElementById("items-body");
-      if (!tpl || !target) return;
-      target.insertAdjacentHTML("beforeend", tpl.innerHTML);
-    }
+ <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.querySelector(".nav-toggle");
+    const overlay = document.getElementById("menu-overlay");
+    const menu = document.getElementById("app-menu");
+    if (!toggle || !overlay || !menu) return;
 
-    function recalcTotal() {
-      const rows = document.querySelectorAll(".item-row");
-      let total = 0;
-      rows.forEach(r => {
-        const qty = parseFloat((r.querySelector('input[name="item_qty"]')?.value || "0").replace(",", "."));
-        const unit = parseFloat((r.querySelector('input[name="item_unit"]')?.value || "0").replace(",", "."));
-        const sub = (qty * unit) || 0;
-        const subEl = r.querySelector(".subtotal");
-        if (subEl) subEl.textContent = sub.toLocaleString("es-AR", {minimumFractionDigits:2, maximumFractionDigits:2});
-        total += sub;
-      });
-      const totalEl = document.getElementById("total-view");
-      if (totalEl) totalEl.textContent = total.toLocaleString("es-AR", {minimumFractionDigits:2, maximumFractionDigits:2});
-    }
+    const openMenu = () => {
+      document.body.classList.add("menu-open");
+      toggle.setAttribute("aria-expanded", "true");
+    };
 
-    document.addEventListener("input", (e) => {
-      if (e.target && (e.target.name === "item_qty" || e.target.name === "item_unit")) {
-        recalcTotal();
-      }
+    const closeMenu = () => {
+      document.body.classList.remove("menu-open");
+      toggle.setAttribute("aria-expanded", "false");
+    };
+
+    toggle.addEventListener("click", () => {
+      document.body.classList.contains("menu-open") ? closeMenu() : openMenu();
     });
 
-    // ===== Menú mobile (drawer) =====
-    (function () {
-      const toggle = document.querySelector(".nav-toggle");
-      const overlay = document.getElementById("menu-overlay");
-      const menu = document.getElementById("app-menu");
-      if (!toggle || !overlay || !menu) return;
+    overlay.addEventListener("click", closeMenu);
 
-      function openMenu() {
-        document.body.classList.add("menu-open");
-        toggle.setAttribute("aria-expanded", "true");
-      }
-      function closeMenu() {
-        document.body.classList.remove("menu-open");
-        toggle.setAttribute("aria-expanded", "false");
-      }
+    menu.addEventListener("click", (e) => {
+      if (e.target.closest("a")) closeMenu();
+    });
 
-      toggle.addEventListener("click", () => {
-        document.body.classList.contains("menu-open") ? closeMenu() : openMenu();
-      });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMenu();
+    });
+  });
+</script>
 
-      overlay.addEventListener("click", closeMenu);
-
-      // Cerrar al tocar un link
-      menu.addEventListener("click", (e) => {
-        if (e.target.closest("a")) closeMenu();
-      });
-
-      // Cerrar con ESC
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeMenu();
-      });
-    })();
-  </script>
 </body>
 
 </html>
