@@ -4,66 +4,12 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{{ app }}</title>
-  <link rel="stylesheet" href="/static/styles.css"/>
+  <link rel="stylesheet" href="/static/styles.css?v=menu-20260107-1"/>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
   <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
 
   <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-
-  <!-- Mobile tweaks (solo base.html, conservador) -->
-  <style>
-    @media (max-width: 720px){
-      /* Container más cómodo */
-      .container{ padding-left: 12px; padding-right: 12px; }
-
-      /* Nav: que envuelva y sea tocable */
-      .nav{
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-      }
-      .nav a{
-        padding: 12px 12px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 48px;
-        text-decoration: none;
-                flex: 1 1 calc(50% - 10px);
-      }
-
-      /* Botones y controles con tamaño mínimo */
-      button, .btn{
-        min-height: 48px;
-      }
-
-      /* Evitar zoom iOS */
-      input, select, textarea{
-        font-size: 16px;
-      }
-
-      /* Header: que no se rompa */
-      .topbar{
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      /* Logout / user chip más cómodo */
-      .logout{
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-      .logout button{
-        padding: 12px 14px;
-        border-radius: 12px;
-      }
-    }
-  </style>
 </head>
 
 <body>
