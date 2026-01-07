@@ -68,7 +68,10 @@
 
 <body>
   <header class="topbar">
-    <div class="brand">{{ app }}</div>
+    <a class="brand" href="/dashboard" aria-label="Inicio">
+      <img class="brand-logo" src="/static/brand/logoFirst.png" alt="First Imports Seguridad">
+      <span class="brand-text">{{ app }}</span>
+    </a>
 
     {% if user %}
     <nav class="nav">
