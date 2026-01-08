@@ -175,7 +175,7 @@ input, select, textarea { font-size: 16px; }
 .menu-overlay{ display:none; }
 
 /* ACTIVAR drawer SOLO en móviles/touch (evita que aparezca en PC) */
-@media (hover: none) and (pointer: coarse) {
+@media (max-width: 860px), (hover: none) and (pointer: coarse) {
 
   .nav-toggle{
     display: inline-flex;
