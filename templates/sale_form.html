@@ -19,6 +19,75 @@
     </div>
   </div>
 
+{% block scripts %}
+<script>
+  function parseNum(v) {
+    if (v == null) return 0;
+    // soporta 1.234,56 y 1234.56
+    v = String(v).trim().replace(/\./g, "").replace(",", ".");
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function fmtMoney(n) {
+    return (Number(n) || 0).toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  function addItemRow() {
+    const body = document.getElementById("items-body");
+    const tpl = document.getElementById("item-row-template");
+    if (!body || !tpl) return;
+
+    body.appendChild(tpl.content.cloneNode(true));
+
+    // enganchar recálculo en la fila nueva
+    const row = body.querySelector("tr.item-row:last-child");
+    row?.querySelectorAll('input[name="item_qty"], input[name="item_unit"]').forEach(inp => {
+      inp.addEventListener("input", recalcTotal);
+    });
+  }
+
+  function recalcTotal() {
+    const body = document.getElementById("items-body");
+    const totalView = document.getElementById("total-view");
+    if (!body || !totalView) return;
+
+    let total = 0;
+
+    body.querySelectorAll("tr.item-row").forEach(row => {
+      const qty = parseNum(row.querySelector('input[name="item_qty"]')?.value);
+      const unit = parseNum(row.querySelector('input[name="item_unit"]')?.value);
+      const sub = qty * unit;
+
+      const subCell = row.querySelector(".subtotal");
+      if (subCell) subCell.textContent = fmtMoney(sub);
+
+      total += sub;
+    });
+
+    totalView.textContent = fmtMoney(total);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const body = document.getElementById("items-body");
+
+    // Para filas existentes (si estás editando una venta)
+    body?.querySelectorAll('input[name="item_qty"], input[name="item_unit"]').forEach(inp => {
+      inp.addEventListener("input", recalcTotal);
+    });
+
+    // Si no hay ítems, creá 1 por defecto
+    if (body && body.children.length === 0) addItemRow();
+
+    recalcTotal();
+  });
+</script>
+{% endblock %}
+
+
   <div class="grid2">
     <div>
       <label>Nombre</label>
