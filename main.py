@@ -501,26 +501,29 @@ def venta_new_post(
         total=0.0,
     )
 
-    total = 0.0
-    for aid, desc_txt, qty_txt, unit_txt in zip(item_articulo_id, item_desc, item_qty, item_unit):
-        if (aid or "").strip() == "" and (desc_txt or "").strip() == "":
-            continue
-        try:
-            qty = float((qty_txt or "0").replace(",", "."))
-            unit = float((unit_txt or "0").replace(",", "."))
-        except ValueError:
-            qty, unit = 0.0, 0.0
-        subtotal = qty * unit
-        total += subtotal
+total = 0.0
+for aid, qty_txt, unit_txt in zip(item_articulo_id, item_qty, item_unit):
+    if (aid or "").strip() == "":
+        continue
 
-        item = VentaItem(
-            articulo_id=int(aid) if (aid or "").strip() else None,
-            descripcion_libre=(desc_txt.strip() or None),
-            cantidad=qty,
-            precio_unitario=unit,
-            subtotal=subtotal,
-        )
-        venta.items.append(item)
+    try:
+        qty = float((qty_txt or "0").replace(",", "."))
+        unit = float((unit_txt or "0").replace(",", "."))
+    except ValueError:
+        qty, unit = 0.0, 0.0
+
+    subtotal = qty * unit
+    total += subtotal
+
+    item = VentaItem(
+        articulo_id=int(aid) if (aid or "").strip() else None,
+        descripcion_libre=None,   # ✅ ya no viene por form
+        cantidad=qty,
+        precio_unitario=unit,
+        subtotal=subtotal,
+    )
+    venta.items.append(item)
+
 
     venta.total = total
     d.add(venta)
