@@ -147,7 +147,7 @@
             </td>
             <td><input name="item_desc" value="{{ it.descripcion_libre or '' }}" placeholder="Opcional"></td>
             <td><input name="item_qty" value="{{ it.cantidad }}" inputmode="decimal"></td>
-            <td><input name="item_unit" value="{{ it.precio_unitario }}" inputmode="decimal"></td>
+            <td><input class="precio-unitario" name="item_unit" value="{{ it.precio_unitario }}" inputmode="decimal"></td>
             <td class="subtotal">0,00</td>
           </tr>
         {% endfor %}
