@@ -132,7 +132,7 @@
   <div class="tablewrap">
     <table class="table">
       <thead>
-        <tr><th>Artículo</th><th>Descripción libre</th><th>Cant.</th><th>P.Unit</th><th>Subtotal</th></tr>
+        <tr><th>Artículo</th><th>Cant.</th><th>P.Unit</th><th>Subtotal</th></tr>
       </thead>
       <tbody id="items-body">
         {% for it in items %}
@@ -164,7 +164,6 @@
           {% endfor %}
         </select>
       </td>
-      <td><input name="item_desc" placeholder="Opcional"></td>
       <td><input name="item_qty" value="1" inputmode="decimal"></td>
       <td><input name="item_unit" value="0" inputmode="decimal"></td>
       <td class="subtotal">0,00</td>
