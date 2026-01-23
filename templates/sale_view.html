@@ -135,5 +135,76 @@
   }
 </script>
 
+<script>
+  function parseNum(x){
+    if (x === null || x === undefined) return 0;
+
+    let s = String(x).trim().replace(/\s/g, "");
+    if (!s) return 0;
+
+    const lastDot = s.lastIndexOf(".");
+    const lastComma = s.lastIndexOf(",");
+
+    // Si tiene ambos, el último define el separador decimal
+    if (lastDot !== -1 && lastComma !== -1) {
+      if (lastDot > lastComma) {
+        // decimal ".", miles ","
+        s = s.replace(/,/g, "");
+      } else {
+        // decimal ",", miles "."
+        s = s.replace(/\./g, "").replace(",", ".");
+      }
+    }
+    // Solo coma
+    else if (lastComma !== -1) {
+      // decimal ","
+      s = s.replace(/\./g, "").replace(",", ".");
+    }
+    // Solo punto
+    else {
+      // decimal "."
+      s = s.replace(/,/g, "");
+    }
+
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function fmt(n){
+    return n.toFixed(2).replace(".", ",");
+  }
+
+  function recalcTotal(){
+    let total = 0;
+
+    document.querySelectorAll("tr.item-row").forEach(row => {
+      const qtyEl  = row.querySelector('input[name="item_qty"]');
+      const unitEl = row.querySelector('input[name="item_unit"]');
+      const subEl  = row.querySelector(".subtotal");
+
+      const qty = parseNum(qtyEl?.value);
+      const unit = parseNum(unitEl?.value);
+
+      const sub = qty * unit;
+      total += sub;
+
+      if (subEl) subEl.textContent = fmt(sub);
+    });
+
+    const totalEl = document.getElementById("total");
+    if (totalEl) totalEl.textContent = fmt(total);
+  }
+
+  // Recalcular en vivo
+  document.addEventListener("input", (e) => {
+    if (e.target.matches('input[name="item_qty"], input[name="item_unit"]')) {
+      recalcTotal();
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", recalcTotal);
+</script>
+
+
 
 {% endblock %}
