@@ -105,7 +105,7 @@
   <template id="item-row-template">
     <tr class="item-row">
       <td>
-        <select name="item_articulo_id">
+        <select name="item_articulo_id" required>
           <option value="">—</option>
           {% for a in articulos %}
             <option value="{{ a.id }}">{{ a.categoria }} • {{ a.nombre }}</option>
