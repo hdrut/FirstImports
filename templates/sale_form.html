@@ -155,20 +155,25 @@
   </div>
 
   <template id="item-row-template">
-    <tr class="item-row">
-      <td>
-        <select name="item_articulo_id">
-          <option value="">—</option>
-          {% for a in articulos %}
-            <option value="{{ a.id }}">{{ a.categoria }} • {{ a.nombre }}</option>
-          {% endfor %}
-        </select>
-      </td>
-      <td><input name="item_qty" value="" inputmode="decimal"></td>
-      <td><input name="item_unit" value="" inputmode="decimal"></td>
-      <td class="subtotal">0,00</td>
-    </tr>
-  </template>
+  <tr class="item-row">
+    <td>
+      <select name="item_articulo_id">
+        <option value="">—</option>
+        {% for a in articulos %}
+          <option value="{{ a.id }}">{{ a.categoria }} • {{ a.nombre }}</option>
+        {% endfor %}
+      </select>
+    </td>
+
+    <td><input name="item_qty" value="" inputmode="decimal"></td>
+
+    <!-- 👇 ACÁ estaba el problema: faltaba la clase -->
+    <td><input class="precio-unitario" name="item_unit" value="" inputmode="decimal"></td>
+
+    <td class="subtotal">0,00</td>
+  </tr>
+</template>
+
 
   <div class="row-between">
     <a href="/ventas" class="btn secondary">Cancelar</a>
