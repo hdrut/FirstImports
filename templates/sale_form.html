@@ -1,13 +1,18 @@
 {% extends "base.html" %}
+
 {% block content %}
 <h2>{% if modo == "new" %}Nueva venta{% else %}Editar venta{% endif %}</h2>
 
-<form class="card form" method="post" action="{% if modo == 'new' %}/ventas/nueva{% else %}/ventas/{{ venta.id }}/editar{% endif %}">
+<form class="card form" method="post"
+      action="{% if modo == 'new' %}/ventas/nueva{% else %}/ventas/{{ venta.id }}/editar{% endif %}">
+
   <div class="grid2">
     <div>
       <label>Fecha</label>
-      <input type="date" name="fecha" required value="{% if venta %}{{ venta.fecha.isoformat() }}{% else %}{{ today }}{% endif %}">
+      <input type="date" name="fecha" required
+             value="{% if venta %}{{ venta.fecha.isoformat() }}{% else %}{{ today }}{% endif %}">
     </div>
+
     <div>
       <label>Medio de pago (opcional)</label>
       <select name="medio_pago">
@@ -19,38 +24,143 @@
     </div>
   </div>
 
+  <div class="grid2">
+    <div>
+      <label>Nombre</label>
+      <input name="cliente_nombre" required value="{{ venta.cliente_nombre if venta else '' }}">
+    </div>
+    <div>
+      <label>Apellido</label>
+      <input name="cliente_apellido" required value="{{ venta.cliente_apellido if venta else '' }}">
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <label>Teléfono (opcional)</label>
+      <input name="telefono" value="{{ venta.telefono if venta and venta.telefono else '' }}">
+    </div>
+    <div>
+      <label>Dirección</label>
+      <input name="direccion"
+             value="{{ venta.direccion if venta and venta.direccion else '' }}"
+             placeholder="Calle y número, localidad"
+             autocomplete="street-address">
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <label>Total</label>
+      <div class="totalbox">$ <span id="total-view">0,00</span></div>
+    </div>
+  </div>
+
+  <label>Observaciones (opcional)</label>
+  <textarea name="observaciones" rows="2">{{ venta.observaciones if venta and venta.observaciones else '' }}</textarea>
+
+  <hr/>
+
+  <div class="row-between">
+    <h3>Ítems</h3>
+    <button type="button" class="btn secondary" id="btn-add-item">+ Agregar ítem</button>
+  </div>
+
+  <div class="tablewrap">
+    <table class="table">
+      <thead>
+        <tr><th>Artículo</th><th>Cant.</th><th>P.Unit</th><th>Subtotal</th></tr>
+      </thead>
+
+      <tbody id="items-body">
+        {% for it in items %}
+          <tr class="item-row">
+            <td>
+              <select name="item_articulo_id">
+                <option value="">—</option>
+                {% for a in articulos %}
+                  <option value="{{ a.id }}" {% if it.articulo_id == a.id %}selected{% endif %}>
+                    {{ a.categoria }} • {{ a.nombre }}
+                  </option>
+                {% endfor %}
+              </select>
+
+              <!-- ✅ Para que el backend no falle con item_desc -->
+              <input type="hidden" name="item_desc" value="">
+            </td>
+
+            <td><input name="item_qty" value="{{ it.cantidad }}" inputmode="decimal"></td>
+
+            <td>
+              <input class="precio-unitario" name="item_unit" value="{{ it.precio_unitario }}" inputmode="decimal">
+            </td>
+
+            <td class="subtotal">0,00</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <template id="item-row-template">
+    <tr class="item-row">
+      <td>
+        <select name="item_articulo_id">
+          <option value="">—</option>
+          {% for a in articulos %}
+            <option value="{{ a.id }}">{{ a.categoria }} • {{ a.nombre }}</option>
+          {% endfor %}
+        </select>
+
+        <!-- ✅ Para que el backend no falle con item_desc -->
+        <input type="hidden" name="item_desc" value="">
+      </td>
+
+      <td><input name="item_qty" value="" inputmode="decimal"></td>
+
+      <td><input class="precio-unitario" name="item_unit" value="" inputmode="decimal"></td>
+
+      <td class="subtotal">0,00</td>
+    </tr>
+  </template>
+
+  <div class="row-between">
+    <a href="/ventas" class="btn secondary">Cancelar</a>
+    <button class="btn" type="submit">Guardar</button>
+  </div>
+</form>
+{% endblock %}
+
 {% block scripts %}
 <script>
   function parseNum(x){
     if (x === null || x === undefined) return 0;
-  
+
     let s = String(x).trim().replace(/\s/g, "");
     if (!s) return 0;
-  
+
     const lastDot = s.lastIndexOf(".");
     const lastComma = s.lastIndexOf(",");
-  
-    // Si tiene ambos, el último define el separador decimal
+
+    // Ambos: el último separador define el decimal
     if (lastDot !== -1 && lastComma !== -1) {
       if (lastDot > lastComma) {
-        // decimal = ".", miles = ","
+        // decimal ".", miles ","
         s = s.replace(/,/g, "");
       } else {
-        // decimal = ",", miles = "."
+        // decimal ",", miles "."
         s = s.replace(/\./g, "").replace(",", ".");
       }
-    } 
+    }
     // Solo coma
     else if (lastComma !== -1) {
-      // decimal = ","
       s = s.replace(/\./g, "").replace(",", ".");
     }
     // Solo punto
     else {
-      // decimal = "."
       s = s.replace(/,/g, "");
     }
-  
+
     const n = Number(s);
     return Number.isFinite(n) ? n : 0;
   }
@@ -59,20 +169,6 @@
     return (Number(n) || 0).toLocaleString("es-AR", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    });
-  }
-
-  function addItemRow() {
-    const body = document.getElementById("items-body");
-    const tpl = document.getElementById("item-row-template");
-    if (!body || !tpl) return;
-
-    body.appendChild(tpl.content.cloneNode(true));
-
-    // enganchar recálculo en la fila nueva
-    const row = body.querySelector("tr.item-row:last-child");
-    row?.querySelectorAll('input[name="item_qty"], input[name="item_unit"]').forEach(inp => {
-      inp.addEventListener("input", recalcTotal);
     });
   }
 
@@ -97,122 +193,11 @@
     totalView.textContent = fmtMoney(total);
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  function addItemRow() {
     const body = document.getElementById("items-body");
+    const tpl = document.getElementById("item-row-template");
+    if (!body || !tpl) return;
 
-    // Para filas existentes (si estás editando una venta)
-    body?.querySelectorAll('input[name="item_qty"], input[name="item_unit"]').forEach(inp => {
-      inp.addEventListener("input", recalcTotal);
-    });
+    body.appendChild(tpl.content.cloneNode(true));
 
-    // Si no hay ítems, creá 1 por defecto
-    if (body && body.children.length === 0) addItemRow();
-
-    recalcTotal();
-  });
-</script>
-{% endblock %}
-
-
-  <div class="grid2">
-    <div>
-      <label>Nombre</label>
-      <input name="cliente_nombre" required value="{{ venta.cliente_nombre if venta else '' }}">
-    </div>
-    <div>
-      <label>Apellido</label>
-      <input name="cliente_apellido" required value="{{ venta.cliente_apellido if venta else '' }}">
-    </div>
-  </div>
-
-  <div class="grid2">
-    <div>
-      <label>Teléfono (opcional)</label>
-      <input name="telefono" value="{{ venta.telefono if venta and venta.telefono else '' }}">
-    </div>
-    <div>
-      <label>Dirección</label>
-      <input name="direccion" value="{{ venta.direccion if venta and venta.direccion else '' }}" 
-      placeholder="Calle y número, localidad"
-      autocomplete="street-address">
-    </div>
-  </div>
-
-<div class="grid2">
-  <div>
-    <label>Total</label>
-    <div class="totalbox">$ <span id="total-view">0,00</span></div>
-  </div>
-</div>
-
-  <label>Observaciones (opcional)</label>
-  <textarea name="observaciones" rows="2">{{ venta.observaciones if venta and venta.observaciones else '' }}</textarea>
-
-  <hr/>
-
-  <div class="row-between">
-    <h3>Ítems</h3>
-    <button type="button" class="btn secondary" onclick="addItemRow(); recalcTotal();">+ Agregar ítem</button>
-  </div>
-
-  <div class="tablewrap">
-    <table class="table">
-      <thead>
-        <tr><th>Artículo</th><th>Cant.</th><th>P.Unit</th><th>Subtotal</th></tr>
-      </thead>
-      <tbody id="items-body">
-        {% for it in items %}
-          <tr class="item-row">
-            <td>
-              <select name="item_articulo_id">
-                <option value="">—</option>
-                {% for a in articulos %}
-                  <option value="{{ a.id }}" {% if it.articulo_id == a.id %}selected{% endif %}>{{ a.categoria }} • {{ a.nombre }}</option>
-                {% endfor %}
-              </select>
-            </td>
-            <td><input name="item_qty" value="{{ it.cantidad }}" inputmode="decimal"></td>
-            <td><input class="precio-unitario" name="item_unit" value="{{ it.precio_unitario }}" inputmode="decimal"></td>
-            <td class="subtotal">0,00</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <template id="item-row-template">
-  <tr class="item-row">
-    <td>
-      <select name="item_articulo_id">
-        <option value="">—</option>
-        {% for a in articulos %}
-          <option value="{{ a.id }}">{{ a.categoria }} • {{ a.nombre }}</option>
-        {% endfor %}
-      </select>
-    </td>
-
-    <td><input name="item_qty" value="" inputmode="decimal"></td>
-
-    <!-- 👇 ACÁ estaba el problema: faltaba la clase -->
-    <td><input class="precio-unitario" name="item_unit" value="" inputmode="decimal"></td>
-
-    <td class="subtotal">0,00</td>
-  </tr>
-</template>
-
-
-  <div class="row-between">
-    <a href="/ventas" class="btn secondary">Cancelar</a>
-    <button class="btn" type="submit">Guardar</button>
-  </div>
-</form>
-
-<script>
-  (function(){
-    const body = document.getElementById("items-body");
-    if (body && body.children.length === 0) addItemRow();
-    recalcTotal();
-  })();
-</script>
-
-{% endblock %}
+    const row = body.querySelector("tr.item-row:last-ch
