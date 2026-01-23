@@ -249,15 +249,36 @@ input, select, textarea { font-size: 16px; }
 }
 
 
-/* Tabla en celular: permitir scroll horizontal (sin romper layout) */
 @media (max-width: 768px){
+
+  /* permite que la tabla no aplaste todo en celular */
   .tablewrap{
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
+  /* fuerza un ancho mínimo para que P.Unit no quede microscópico */
   .table{
-    min-width: 640px; /* fuerza ancho mínimo para que no aplaste columnas */
+    min-width: 700px;
+    table-layout: auto !important;
+  }
+
+  /* ancho de la columna P.Unit */
+  .table th:nth-child(3),
+  .table td:nth-child(3){
+    width: 170px;
+    min-width: 170px;
+  }
+
+  /* input P.Unit cómodo */
+  .table td:nth-child(3) input.precio-unitario{
+    width: 100%;
+    min-width: 170px;
+    padding: 10px 12px;
+    font-size: 16px; /* evita zoom iPhone */
+    box-sizing: border-box;
+    display: block;
   }
 }
+
 
