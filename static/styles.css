@@ -248,3 +248,33 @@ input, select, textarea { font-size: 16px; }
   }
 }
 
+
+/* Mejora inputs numéricos en móvil (Nueva venta) */
+@media (max-width: 600px) {
+
+  /* Precio unitario / cantidad / descuento si aplica */
+  input[type="number"],
+  input.precio-unitario{
+    min-width: 110px;     /* evita que queden finitos */
+    width: 100%;
+    padding: 10px 12px;   /* más cómodo para tocar/escribir */
+    font-size: 16px;      /* evita el zoom automático en iOS */
+    box-sizing: border-box;
+  }
+
+  /* Si están dentro de celdas o filas tipo grid */
+  .items-row,
+  .items-grid {
+    grid-template-columns: 1fr 110px 110px; /* nombre | cant | precio */
+    gap: 10px;
+  }
+
+  /* Subtotales visibles y alineados prolijos */
+  .subtotal,
+  .money {
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+
