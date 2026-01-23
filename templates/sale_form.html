@@ -200,4 +200,26 @@
 
     body.appendChild(tpl.content.cloneNode(true));
 
-    const row = body.querySelector("tr.item-row:last-ch
+    const row = body.querySelector("tr.item-row:last-child");
+    row?.querySelectorAll('input[name="item_qty"], input[name="item_unit"]').forEach(inp => {
+      inp.addEventListener("input", recalcTotal);
+    });
+
+    recalcTotal();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const body = document.getElementById("items-body");
+    const btnAdd = document.getElementById("btn-add-item");
+
+    btnAdd?.addEventListener("click", addItemRow);
+
+    body?.querySelectorAll('input[name="item_qty"], input[name="item_unit"]').forEach(inp => {
+      inp.addEventListener("input", recalcTotal);
+    });
+
+    if (body && body.children.length === 0) addItemRow();
+    recalcTotal();
+  });
+</script>
+{% endblock %}
