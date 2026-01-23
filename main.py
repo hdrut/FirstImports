@@ -613,26 +613,34 @@ def venta_edit_post(
 
     venta.items.clear()
     total = 0.0
-    for aid, desc_txt, qty_txt, unit_txt in zip(item_articulo_id, item_desc, item_qty, item_unit):
-        if (aid or "").strip() == "" and (desc_txt or "").strip() == "":
+    
+    # ✅ IMPORTANTE: si estás editando, normalmente hay que limpiar items previos
+    venta.items.clear()
+    
+    for aid, qty_txt, unit_txt in zip(item_articulo_id, item_qty, item_unit):
+        if (aid or "").strip() == "":
             continue
+    
         try:
             qty = float((qty_txt or "0").replace(",", "."))
             unit = float((unit_txt or "0").replace(",", "."))
         except ValueError:
             qty, unit = 0.0, 0.0
+    
         subtotal = qty * unit
         total += subtotal
-        venta.items.append(
-            VentaItem(
-                articulo_id=int(aid) if (aid or "").strip() else None,
-                descripcion_libre=(desc_txt.strip() or None),
-                cantidad=qty,
-                precio_unitario=unit,
-                subtotal=subtotal,
-            )
+    
+        item = VentaItem(
+            articulo_id=int(aid) if (aid or "").strip() else None,
+            descripcion_libre=None,
+            cantidad=qty,
+            precio_unitario=unit,
+            subtotal=subtotal,
         )
+        venta.items.append(item)
+    
     venta.total = total
+
     venta.updated_at = datetime.utcnow()
     d.commit()
     return redirect(f"/ventas/{venta.id}")
