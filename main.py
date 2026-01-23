@@ -606,50 +606,73 @@ def venta_edit_post(
     if not f:
         raise HTTPException(400, "Fecha inválida")
 
-    # --- Actualizar cabecera ---
     venta.fecha = f
     venta.cliente_nombre = cliente_nombre.strip()
     venta.cliente_apellido = cliente_apellido.strip()
-    venta.telefono = telefono.strip() or None
-    venta.direccion = direccion.strip() or None
-    venta.medio_pago = medio_pago.strip() or None
-    venta.observaciones = observaciones.strip() or None
+    venta.telefono = telefono.strip() or ""      # ✅ evita NULL si tu DB no permite
+    venta.direccion = direccion.strip() or ""    # ✅ evita NULL si tu DB no permite
+    venta.medio_pago = medio_pago.strip() or ""  # ✅ evita NULL si tu DB no permite
+    venta.observaciones = observaciones.strip() or ""  # ✅ evita NULL si tu DB no permite
 
-    # --- Helpers ---
     def parse_num(txt: str) -> float:
         s = (txt or "").strip().replace(" ", "")
         if not s:
             return 0.0
-
-        # Si tiene coma, asumimos formato AR: 1.234,56
-        if "," in s:
+        last_dot = s.rfind(".")
+        last_comma = s.rfind(",")
+        if last_dot != -1 and last_comma != -1:
+            if last_dot > last_comma:
+                s = s.replace(",", "")
+            else:
+                s = s.replace(".", "").replace(",", ".")
+        elif last_comma != -1:
             s = s.replace(".", "").replace(",", ".")
         else:
-            # Si no tiene coma, permitimos decimal con punto: 1234.56
             s = s.replace(",", "")
-
         try:
             return float(s)
         except ValueError:
             return 0.0
 
-    # --- Reemplazar items ---
-    venta.items.clear()   # ✅ solo una vez
+    # ✅ reemplazo completo de items
+    venta.items.clear()
 
     total = 0.0
 
-    # ✅ zip_longest evita que se “corte” todo si item_desc viene vacío
     for aid, desc_txt, qty_txt, unit_txt in zip_longest(
         item_articulo_id, item_desc, item_qty, item_unit, fillvalue=""
     ):
         aid = (aid or "").strip()
         desc_txt = (desc_txt or "").strip()
 
-        # Si no hay artículo ni desc, ignorar
-        if aid == "" and desc_txt == "":
+        # ✅ si no hay artículo, ignorar fila
+        if aid == "":
             continue
 
         qty = parse_num(qty_txt)
+        unit = parse_num(unit_txt)
+
+        if qty <= 0:
+            continue
+
+        subtotal = qty * unit
+        total += subtotal
+
+        item = VentaItem(
+            articulo_id=int(aid),
+            descripcion_libre=desc_txt,  # ✅ NUNCA None
+            cantidad=qty,
+            precio_unitario=unit,
+            subtotal=subtotal,
+        )
+        venta.items.append(item)
+
+    venta.total = total
+    venta.updated_at = datetime.utcnow()
+
+    d.commit()
+    return redirect(f"/ventas/{venta.id}")
+
 
 
 
