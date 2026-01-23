@@ -518,7 +518,7 @@ def venta_new_post(
     
         item = VentaItem(
             articulo_id=int(aid) if (aid or "").strip() else None,
-            descripcion_libre=(desc_txt or "").strip()
+            descripcion_libre=(desc_txt or "").strip(),
             cantidad=qty,
             precio_unitario=unit,
             subtotal=subtotal,
