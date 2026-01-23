@@ -49,6 +49,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 
 
+
 # -----------------------------
 # Config
 # -----------------------------
@@ -577,6 +578,8 @@ def venta_edit_get(
     )
 
 
+from itertools import zip_longest
+
 @app.post("/ventas/{venta_id}/editar")
 def venta_edit_post(
     request: Request,
@@ -603,6 +606,7 @@ def venta_edit_post(
     if not f:
         raise HTTPException(400, "Fecha inválida")
 
+    # --- Actualizar cabecera ---
     venta.fecha = f
     venta.cliente_nombre = cliente_nombre.strip()
     venta.cliente_apellido = cliente_apellido.strip()
@@ -611,39 +615,42 @@ def venta_edit_post(
     venta.medio_pago = medio_pago.strip() or None
     venta.observaciones = observaciones.strip() or None
 
-    venta.items.clear()
-    total = 0.0
-    
-    # ✅ IMPORTANTE: si estás editando, normalmente hay que limpiar items previos
-    venta.items.clear()
-    
-    for aid, qty_txt, unit_txt in zip(item_articulo_id, item_qty, item_unit):
-        if (aid or "").strip() == "":
-            continue
-    
-        try:
-            qty = float((qty_txt or "0").replace(",", "."))
-            unit = float((unit_txt or "0").replace(",", "."))
-        except ValueError:
-            qty, unit = 0.0, 0.0
-    
-        subtotal = qty * unit
-        total += subtotal
-    
-        item = VentaItem(
-            articulo_id=int(aid) if (aid or "").strip() else None,
-            descripcion_libre=None,
-            cantidad=qty,
-            precio_unitario=unit,
-            subtotal=subtotal,
-        )
-        venta.items.append(item)
-    
-    venta.total = total
+    # --- Helpers ---
+    def parse_num(txt: str) -> float:
+        s = (txt or "").strip().replace(" ", "")
+        if not s:
+            return 0.0
 
-    venta.updated_at = datetime.utcnow()
-    d.commit()
-    return redirect(f"/ventas/{venta.id}")
+        # Si tiene coma, asumimos formato AR: 1.234,56
+        if "," in s:
+            s = s.replace(".", "").replace(",", ".")
+        else:
+            # Si no tiene coma, permitimos decimal con punto: 1234.56
+            s = s.replace(",", "")
+
+        try:
+            return float(s)
+        except ValueError:
+            return 0.0
+
+    # --- Reemplazar items ---
+    venta.items.clear()   # ✅ solo una vez
+
+    total = 0.0
+
+    # ✅ zip_longest evita que se “corte” todo si item_desc viene vacío
+    for aid, desc_txt, qty_txt, unit_txt in zip_longest(
+        item_articulo_id, item_desc, item_qty, item_unit, fillvalue=""
+    ):
+        aid = (aid or "").strip()
+        desc_txt = (desc_txt or "").strip()
+
+        # Si no hay artículo ni desc, ignorar
+        if aid == "" and desc_txt == "":
+            continue
+
+        qty = parse_num(qty_txt)
+
 
 
 @app.post("/ventas/{venta_id}/eliminar")
